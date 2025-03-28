@@ -7,7 +7,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "*" }));
+
 
 // Conectar ao MongoDB
 mongoose.connect(process.env.MONGO_URI, {
@@ -15,6 +16,8 @@ mongoose.connect(process.env.MONGO_URI, {
   useUnifiedTopology: true
 }).then(() => console.log('MongoDB conectado'))
   .catch(err => console.log(err));
+
+  
 
 // Importando Rotas
 const clienteRoutes = require('./routes/clienteRoutes');

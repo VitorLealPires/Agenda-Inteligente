@@ -1,117 +1,189 @@
 "use client";
-import { useEffect, useState } from "react";
 
-export default function ClientesPage() {
-  const [clientes, setClientes] = useState([]); // Garante que começa como array
-  const [formData, setFormData] = useState({
-    nome: "",
-    cpf: "",
-    telefone: "",
-    tipoAcao: "",
-    honorarios: { valor: "", tipo: "" },
-    advogado: "",
-    porcentagemAdvogado: "",
-  });
+import { useState, useEffect } from "react";
+import styled from "styled-components";
+import Link from "next/link";
+import { Edit, Trash2, Eye, UserPlus, Search } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableCell, TableActions } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
+const ClientsHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+`;
+
+const SearchContainer = styled.div`
+  position: relative;
+  max-width: 400px;
+  width: 100%;
+`;
+
+const SearchIconWrapper = styled.div`
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--foreground);
+  opacity: 0.5;
+`;
+
+const SearchInput = styled(Input)`
+  padding-left: 2.5rem;
+`;
+
+const ActionButton = styled(Button)`
+  margin-left: 0.5rem;
+`;
+
+// Dados simulados para a lista de clientes
+const clientsData = [
+  {
+    id: 1,
+    nome: "João Silva",
+    cpf: "123.456.789-00",
+    telefone: "(11) 98765-4321",
+    tipoAcao: "Trabalhista",
+    honorarios: "R$ 3.000,00",
+    advogado: "Dr. Carlos Mendes",
+    porcentagem: "30%",
+  },
+  {
+    id: 2,
+    nome: "Maria Oliveira",
+    cpf: "987.654.321-00",
+    telefone: "(11) 91234-5678",
+    tipoAcao: "Civil",
+    honorarios: "R$ 5.000,00",
+    advogado: "Dra. Ana Souza",
+    porcentagem: "25%",
+  },
+  {
+    id: 3,
+    nome: "Pedro Santos",
+    cpf: "456.789.123-00",
+    telefone: "(11) 95555-9999",
+    tipoAcao: "Previdenciário",
+    honorarios: "R$ 2.500,00",
+    advogado: "Dr. Roberto Alves",
+    porcentagem: "20%",
+  },
+];
+
+export default function ClientsList() {
+  const [clients] = useState(clientsData);
+  const [filteredClients, setFilteredClients] = useState(clientsData);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Função para filtrar clientes com base no termo de busca
   useEffect(() => {
-    fetchClientes();
-  }, []);
-
-  async function fetchClientes() {
-    try {
-      const res = await fetch("http://localhost:5000/clientes");
-      const data = await res.json();
-      
-      // Garante que 'data' é um array antes de chamar setClientes
-      if (Array.isArray(data)) {
-        setClientes(data);
-      } else {
-        console.error("Erro: A API não retornou um array.", data);
-        setClientes([]); // Evita erro no .map()
-      }
-    } catch (error) {
-      console.error("Erro ao buscar clientes:", error);
-      setClientes([]); // Garante que clientes não seja undefined
-    }
-  }
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name.startsWith("honorarios.")) {
-      const field = name.split(".")[1];
-      setFormData((prev) => ({
-        ...prev,
-        honorarios: { ...prev.honorarios, [field]: value },
-      }));
+    if (searchTerm.trim() !== "") {
+      const filtered = clients.filter(
+        (client) =>
+          client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client.cpf.includes(searchTerm) ||
+          client.telefone.includes(searchTerm)
+      );
+      setFilteredClients(filtered);
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFilteredClients(clients);
+    }
+  }, [searchTerm, clients]);
+
+  // Função para excluir um cliente
+  const handleDelete = (id) => {
+    if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
+      const updatedClients = filteredClients.filter((client) => client.id !== id);
+      setFilteredClients(updatedClients);
     }
   };
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    console.log("📤 Enviando dados:", formData);
-  
-    try {
-      const res = await fetch("http://localhost:5000/clientes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (res.ok) {
-        console.log("✅ Cliente cadastrado com sucesso!");
-        setFormData({
-          nome: "",
-          cpf: "",
-          telefone: "",
-          tipoAcao: "",
-          honorarios: { valor: "", tipo: "" },
-          advogado: "",
-          porcentagemAdvogado: "",
-        });
-        fetchClientes();
-      } else {
-        console.error("❌ Erro ao adicionar cliente.");
-        const errorData = await res.json();
-        console.error("🛑 Detalhes do erro:", errorData);
-      }
-    } catch (error) {
-      console.error("⚠️ Erro ao enviar os dados:", error);
-    }
-  }
-
   return (
-    <div style={{ maxWidth: "600px", margin: "auto", padding: "20px" }}>
-      <h1>Cadastro de Clientes</h1>
+    <div>
+      <ClientsHeader>
+        <h1 className="text-2xl font-bold">Lista de Clientes</h1>
+        <Link href="/clientes/cadastrar" passHref>
+          <Button>
+            <UserPlus size={18} />
+            Novo Cliente
+          </Button>
+        </Link>
+      </ClientsHeader>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <input type="text" name="nome" placeholder="Nome" value={formData.nome} onChange={handleChange} required />
-        <input type="text" name="cpf" placeholder="CPF" value={formData.cpf} onChange={handleChange} required />
-        <input type="text" name="telefone" placeholder="Telefone" value={formData.telefone} onChange={handleChange} required />
-        <input type="text" name="tipoAcao" placeholder="Tipo de Ação" value={formData.tipoAcao} onChange={handleChange} required />
-        <input type="text" name="honorarios.valor" placeholder="Valor Honorários" value={formData.honorarios.valor} onChange={handleChange} required />
-        <input type="text" name="honorarios.tipo" placeholder="Tipo Honorários" value={formData.honorarios.tipo} onChange={handleChange} required />
-        <input type="text" name="advogado" placeholder="Advogado Responsável" value={formData.advogado} onChange={handleChange} required />
-        <input type="text" name="porcentagemAdvogado" placeholder="Porcentagem Advogado" value={formData.porcentagemAdvogado} onChange={handleChange} required />
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Filtrar Clientes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SearchContainer>
+            <SearchIconWrapper>
+              <Search size={18} />
+            </SearchIconWrapper>
+            <SearchInput
+              placeholder="Buscar por nome, CPF ou telefone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </SearchContainer>
+        </CardContent>
+      </Card>
 
-        <button type="submit" style={{ backgroundColor: "#0070f3", color: "white", padding: "10px", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-          Cadastrar
-        </button>
-      </form>
-
-      <h2 style={{ marginTop: "20px" }}>Clientes Cadastrados</h2>
-      {Array.isArray(clientes) && clientes.length > 0 ? (
-        <ul>
-          {clientes.map((cliente) => (
-            <li key={cliente._id}>
-              <strong>Nome:</strong> {cliente.nome} | <strong>CPF:</strong> {cliente.cpf}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>Nenhum cliente cadastrado.</p>
-      )}
+      <Card>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>CPF</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>Tipo de Ação</TableHead>
+              <TableHead>Honorários</TableHead>
+              <TableHead>Advogado</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <tbody>
+            {filteredClients.length > 0 ? (
+              filteredClients.map((client) => (
+                <TableRow key={client.id}>
+                  <TableCell>{client.nome}</TableCell>
+                  <TableCell>{client.cpf}</TableCell>
+                  <TableCell>{client.telefone}</TableCell>
+                  <TableCell>{client.tipoAcao}</TableCell>
+                  <TableCell>{client.honorarios}</TableCell>
+                  <TableCell>{client.advogado}</TableCell>
+                  <TableCell>
+                    <TableActions>
+                      <Link href={`/clientes/${client.id}`} passHref>
+                        <ActionButton variant="ghost" size="sm">
+                          <Eye size={16} />
+                        </ActionButton>
+                      </Link>
+                      <Link href={`/clientes/editar/${client.id}`} passHref>
+                        <ActionButton variant="ghost" size="sm">
+                          <Edit size={16} />
+                        </ActionButton>
+                      </Link>
+                      <ActionButton variant="ghost" size="sm" onClick={() => handleDelete(client.id)}>
+                        <Trash2 size={16} />
+                      </ActionButton>
+                    </TableActions>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan="7" className="text-center py-4">
+                  Nenhum cliente encontrado.
+                </TableCell>
+              </TableRow>
+            )}
+          </tbody>
+        </Table>
+      </Card>
     </div>
   );
 }
+

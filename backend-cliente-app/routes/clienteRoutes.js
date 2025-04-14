@@ -7,17 +7,10 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     const novoCliente = new Cliente(req.body);
-
-    // Validar os dados antes de salvar
-    const error = novoCliente.validateSync();
-    if (error) {
-      return res.status(400).json({ message: 'Dados inválidos', error: error.message });
-    }
-
     await novoCliente.save();
-    res.status(201).json({ message: 'Cliente criado com sucesso', cliente: novoCliente });
+    res.status(201).json(novoCliente);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao cadastrar cliente', error: error.message });
+    res.status(500).json({ message: 'Erro ao cadastrar cliente', error });
   }
 });
 
@@ -25,9 +18,9 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const clientes = await Cliente.find();
-    res.json({ message: 'Clientes encontrados com sucesso', clientes });
+    res.json(clientes);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar clientes', error: error.message });
+    res.status(500).json({ message: 'Erro ao buscar clientes', error });
   }
 });
 
@@ -38,9 +31,9 @@ router.get('/:id', async (req, res) => {
     if (!cliente) {
       return res.status(404).json({ message: 'Cliente não encontrado' });
     }
-    res.json({ message: 'Cliente encontrado', cliente });
+    res.json(cliente);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar cliente', error: error.message });
+    res.status(500).json({ message: 'Erro ao buscar cliente', error });
   }
 });
 
@@ -48,20 +41,12 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const clienteAtualizado = await Cliente.findByIdAndUpdate(req.params.id, req.body, { new: true });
-
     if (!clienteAtualizado) {
       return res.status(404).json({ message: 'Cliente não encontrado' });
     }
-
-    // Validar os dados antes de salvar
-    const error = clienteAtualizado.validateSync();
-    if (error) {
-      return res.status(400).json({ message: 'Dados inválidos', error: error.message });
-    }
-
-    res.json({ message: 'Cliente atualizado com sucesso', cliente: clienteAtualizado });
+    res.json(clienteAtualizado);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao atualizar cliente', error: error.message });
+    res.status(500).json({ message: 'Erro ao atualizar cliente', error });
   }
 });
 
@@ -74,9 +59,8 @@ router.delete('/:id', async (req, res) => {
     }
     res.json({ message: 'Cliente deletado com sucesso' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao deletar cliente', error: error.message });
+    res.status(500).json({ message: 'Erro ao deletar cliente', error });
   }
 });
 
 module.exports = router;
-

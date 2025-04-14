@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styled from "styled-components";
 import { Home, Users, UserPlus, FileText, Settings, LogOut } from "lucide-react";
 
@@ -85,12 +85,17 @@ const FooterItem = styled.div`
 export default function Sidebar() {
   const [isClient, setIsClient] = useState(false);
   const [pathname, setPathname] = useState("");
+  const router = useRouter();
 
-  // UseEffect to ensure code runs only on client side
   useEffect(() => {
-    setIsClient(true); // Ensure this runs only on the client side
-    setPathname(window.location.pathname); // Set pathname after component mounts
+    setIsClient(true);
+    setPathname(window.location.pathname);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
 
   const navItems = [
     { icon: <Home size={20} />, label: "Dashboard", path: "/" },
@@ -99,14 +104,12 @@ export default function Sidebar() {
     { icon: <FileText size={20} />, label: "Relatórios", path: "/relatorios" },
   ];
 
-  // Render only when the component is mounted in the client
-  if (!isClient) {
-    return null;
-  }
+  if (!isClient) return null;
 
   return (
     <SidebarContainer>
-      <Logo>{isClient ? "JuriSystem" : ""}</Logo>
+      <Logo>{isClient ? "Mauricio Advocacia" : ""}</Logo>
+
       <NavMenu>
         {navItems.map((item) => (
           <Link href={item.path} key={item.path} passHref>
@@ -117,6 +120,7 @@ export default function Sidebar() {
           </Link>
         ))}
       </NavMenu>
+
       <Footer>
         <Link href="/configuracoes">
           <FooterItem>
@@ -126,7 +130,7 @@ export default function Sidebar() {
             Configurações
           </FooterItem>
         </Link>
-        <FooterItem>
+        <FooterItem onClick={handleLogout}>
           <NavIcon>
             <LogOut size={20} />
           </NavIcon>
@@ -136,5 +140,3 @@ export default function Sidebar() {
     </SidebarContainer>
   );
 }
-
-

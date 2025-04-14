@@ -27,7 +27,7 @@ const ClientInfo = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
@@ -56,20 +56,29 @@ export default function ClientDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!params.id) return; // Se `id` não estiver disponível, não faz a requisição.
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
 
-    console.log("Buscando cliente com ID:", params.id);
+    if (!params.id) return;
 
     const fetchClientData = async () => {
       try {
-        const clientId = params.id; // Pegando ID correto
-        const response = await fetch(`http://localhost:5000/clientes/${clientId}`);
+        setLoading(true);
+        const clientId = params.id;
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${clientId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        if (!response.ok) {
-          throw new Error("Erro ao buscar os dados do cliente");
+        if (!res.ok) {
+          throw new Error(`Erro ao buscar os dados do cliente: ${res.status}`);
         }
 
-        const data = await response.json();
+        const data = await res.json();
         setClient(data);
       } catch (error) {
         console.error("Erro ao carregar os dados do cliente:", error);
@@ -79,23 +88,35 @@ export default function ClientDetails() {
     };
 
     fetchClientData();
-  }, [params.id]);
+  }, [params.id, router]);
 
   const handleDelete = async () => {
+    if (!client || !client._id) {
+      alert("ID do cliente não encontrado.");
+      return;
+    }
+
     if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
       try {
-        const clientId = params.id;
-        const response = await fetch(`http://localhost:5000/clientes/${clientId}`, {
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${client._id}`, {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
-        if (response.ok) {
-          router.push("/clientes");
-        } else {
-          console.error("Erro ao excluir cliente");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Erro ao excluir cliente");
         }
+
+        alert("Cliente excluído com sucesso.");
+        router.push("/clientes");
       } catch (error) {
         console.error("Erro ao excluir o cliente:", error);
+        alert("Erro ao excluir o cliente. Verifique o console para mais detalhes.");
       }
     }
   };
@@ -119,6 +140,18 @@ export default function ClientDetails() {
     );
   }
 
+  const {
+    nome,
+    cpf,
+    telefone,
+    tipoAcao,
+    advogado,
+    observacoes,
+    porcentagemAdvogado,
+    honorarios,
+    dataFechamentoContrato,
+  } = client;
+
   return (
     <ClientContainer>
       <ClientHeader>
@@ -134,58 +167,76 @@ export default function ClientDetails() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{client.nome}</CardTitle>
+          <CardTitle>{nome}</CardTitle>
         </CardHeader>
 
         <CardContent>
           <ClientInfo>
             <InfoGroup>
               <InfoLabel>CPF</InfoLabel>
-              <InfoValue>{client.cpf}</InfoValue>
+              <InfoValue>{cpf}</InfoValue>
             </InfoGroup>
 
             <InfoGroup>
               <InfoLabel>Telefone</InfoLabel>
-              <InfoValue>{client.telefone}</InfoValue>
+              <InfoValue>{telefone}</InfoValue>
             </InfoGroup>
 
             <InfoGroup>
               <InfoLabel>Tipo de Ação</InfoLabel>
-              <InfoValue>{client.tipoAcao}</InfoValue>
+              <InfoValue>{tipoAcao}</InfoValue>
             </InfoGroup>
 
             <InfoGroup>
-              <InfoLabel>Honorários</InfoLabel>
+              <InfoLabel>Valor dos Honorários</InfoLabel>
               <InfoValue>
-                {client.honorariosValor} ({client.honorariosTipo})
+                {honorarios?.valor ? `R$ ${honorarios.valor}` : "Não informado"}
+              </InfoValue>
+            </InfoGroup>
+
+            <InfoGroup>
+              <InfoLabel>Parcelamento de Honorário</InfoLabel>
+              <InfoValue>
+                {honorarios?.parcelamento?.trim() || "Não informado"}
               </InfoValue>
             </InfoGroup>
 
             <InfoGroup>
               <InfoLabel>Advogado Responsável</InfoLabel>
-              <InfoValue>{client.advogado}</InfoValue>
+              <InfoValue>{advogado}</InfoValue>
             </InfoGroup>
 
             <InfoGroup>
               <InfoLabel>Porcentagem do Advogado</InfoLabel>
-              <InfoValue>{client.porcentagem}</InfoValue>
+              <InfoValue>
+                {porcentagemAdvogado ? `${porcentagemAdvogado}%` : "Não informado"}
+              </InfoValue>
+            </InfoGroup>
+
+            <InfoGroup>
+              <InfoLabel>Data de Fechamento do Contrato</InfoLabel>
+              <InfoValue>
+                {dataFechamentoContrato
+                  ? new Date(dataFechamentoContrato).toLocaleDateString("pt-BR")
+                  : "Não informada"}
+              </InfoValue>
             </InfoGroup>
           </ClientInfo>
 
           <InfoGroup>
             <InfoLabel>Observações</InfoLabel>
-            <InfoValue>{client.observacoes || "Nenhuma observação registrada."}</InfoValue>
+            <InfoValue>{observacoes || "Nenhuma observação registrada."}</InfoValue>
           </InfoGroup>
         </CardContent>
 
         <CardFooter>
-          <Link href={`/clientes/editar/${client.id}`}>
+          <Link href={`/clientes/editar/${client._id}`}>
             <Button variant="outline" className="mr-2">
               <Edit size={18} />
               Editar
             </Button>
           </Link>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button variant="destructive" onClick={handleDelete}>
             <Trash2 size={18} />
             Excluir
           </Button>
@@ -194,5 +245,7 @@ export default function ClientDetails() {
     </ClientContainer>
   );
 }
+
+
 
 

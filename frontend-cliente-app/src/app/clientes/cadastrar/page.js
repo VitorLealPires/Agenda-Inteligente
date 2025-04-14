@@ -6,7 +6,7 @@ import styled from "styled-components"
 import { Save, ArrowLeft } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FormGroup, Label, Input, Select, Textarea, ErrorText } from "@/components/ui/input"
+import { FormGroup, Label, Input, ErrorText } from "@/components/ui/input"
 import Link from "next/link"
 
 const FormContainer = styled.div`
@@ -43,10 +43,11 @@ export default function ClientRegister() {
     telefone: "",
     tipoAcao: "",
     honorariosValor: "",
-    honorariosTipo: "fixo",
     advogado: "",
     porcentagem: "",
     observacoes: "",
+    parcelamento: "",
+    dataFechamentoContrato: "",
   })
 
   const [errors, setErrors] = useState({})
@@ -56,7 +57,6 @@ export default function ClientRegister() {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
 
-    // Limpa o erro do campo quando o usuário começa a digitar
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }))
     }
@@ -65,35 +65,15 @@ export default function ClientRegister() {
   const validateForm = () => {
     const newErrors = {}
 
-    if (!formData.nome.trim()) {
-      newErrors.nome = "Nome é obrigatório"
-    }
-
-    if (!formData.cpf.trim()) {
-      newErrors.cpf = "CPF é obrigatório"
-    } else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf)) {
-      newErrors.cpf = "CPF inválido. Use o formato 000.000.000-00"
-    }
-
-    if (!formData.telefone.trim()) {
-      newErrors.telefone = "Telefone é obrigatório"
-    }
-
-    if (!formData.tipoAcao) {
-      newErrors.tipoAcao = "Tipo de ação é obrigatório"
-    }
-
-    if (!formData.honorariosValor.trim()) {
-      newErrors.honorariosValor = "Valor dos honorários é obrigatório"
-    }
-
-    if (!formData.advogado) {
-      newErrors.advogado = "Advogado responsável é obrigatório"
-    }
-
-    if (!formData.porcentagem.trim()) {
-      newErrors.porcentagem = "Porcentagem do advogado é obrigatória"
-    }
+    if (!formData.nome.trim()) newErrors.nome = "Nome é obrigatório"
+    if (!formData.cpf.trim()) newErrors.cpf = "CPF é obrigatório"
+    if (!formData.telefone.trim()) newErrors.telefone = "Telefone é obrigatório"
+    if (!formData.tipoAcao) newErrors.tipoAcao = "Tipo de ação é obrigatório"
+    if (!formData.honorariosValor.trim()) newErrors.honorariosValor = "Valor dos honorários é obrigatório"
+    if (!formData.parcelamento.trim()) newErrors.parcelamento = "Parcelamento é obrigatório"
+    if (!formData.advogado) newErrors.advogado = "Advogado responsável é obrigatório"
+    if (!formData.porcentagem.trim()) newErrors.porcentagem = "Porcentagem do advogado é obrigatória"
+    if (!formData.dataFechamentoContrato.trim()) newErrors.dataFechamentoContrato = "Data de fechamento é obrigatória"
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -102,34 +82,53 @@ export default function ClientRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setIsSubmitting(true)
 
+    const payload = {
+      nome: formData.nome,
+      cpf: formData.cpf,
+      telefone: formData.telefone,
+      tipoAcao: formData.tipoAcao,
+      advogado: formData.advogado,
+      observacoes: formData.observacoes,
+      porcentagemAdvogado: formData.porcentagem,
+      honorarios: {
+        valor: formData.honorariosValor,
+        parcelamento: formData.parcelamento,
+      },
+      dataFechamentoContrato: formData.dataFechamentoContrato,
+    }
+
     try {
-      // Aqui seria feita a chamada à API para cadastrar o cliente
-      
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData),
-      // })
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
 
-      // if (!response.ok) {
-      //   throw new Error('Erro ao cadastrar cliente')
-      // }
+      let responseData
+      try {
+        responseData = await response.json()
+      } catch (jsonError) {
+        console.error("Erro ao converter resposta para JSON:", jsonError)
+        responseData = { message: "Resposta inválida do servidor" }
+      }
 
-      // Simulação de delay para mostrar o estado de loading
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      console.log("🔹 Status da resposta:", response.status)
+      console.log("🔹 Resposta da API:", responseData)
 
-      // Redireciona para a lista de clientes após o cadastro
+      if (!response.ok) {
+        throw new Error(`Erro ao cadastrar cliente: ${responseData.message || response.statusText}`)
+      }
+
       router.push("/clientes")
     } catch (error) {
-      console.error("Erro ao cadastrar cliente:", error)
-      alert("Ocorreu um erro ao cadastrar o cliente. Tente novamente.")
+      console.error("🔥 Erro ao cadastrar cliente:", error)
+      alert(`Ocorreu um erro ao cadastrar o cliente: ${error.message}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -169,13 +168,7 @@ export default function ClientRegister() {
 
               <FormGroup>
                 <Label htmlFor="telefone">Telefone</Label>
-                <Input
-                  id="telefone"
-                  name="telefone"
-                  placeholder="(00) 00000-0000"
-                  value={formData.telefone}
-                  onChange={handleChange}
-                />
+                <Input id="telefone" name="telefone" placeholder="(00) 00000-0000" value={formData.telefone} onChange={handleChange} />
                 {errors.telefone && <ErrorText>{errors.telefone}</ErrorText>}
               </FormGroup>
             </FormGrid>
@@ -188,76 +181,92 @@ export default function ClientRegister() {
             <FormGrid>
               <FormGroup>
                 <Label htmlFor="tipoAcao">Tipo de Ação</Label>
-                <Select id="tipoAcao" name="tipoAcao" value={formData.tipoAcao} onChange={handleChange}>
-                  <option value="">Selecione o tipo de ação</option>
-                  <option value="Trabalhista">Trabalhista</option>
-                  <option value="Civil">Civil</option>
-                  <option value="Previdenciário">Previdenciário</option>
-                  <option value="Consumidor">Consumidor</option>
-                  <option value="Família">Família</option>
-                  <option value="Criminal">Criminal</option>
-                  <option value="Tributário">Tributário</option>
-                </Select>
+                <Input
+                  id="tipoAcao"
+                  name="tipoAcao"
+                  placeholder="Digite o tipo de ação"
+                  value={formData.tipoAcao}
+                  onChange={handleChange}
+                />
                 {errors.tipoAcao && <ErrorText>{errors.tipoAcao}</ErrorText>}
               </FormGroup>
 
-              <div>
-                <FormGroup>
-                  <Label htmlFor="honorariosValor">Valor dos Honorários</Label>
-                  <Input
-                    id="honorariosValor"
-                    name="honorariosValor"
-                    placeholder="R$ 0,00"
-                    value={formData.honorariosValor}
-                    onChange={handleChange}
-                  />
-                  {errors.honorariosValor && <ErrorText>{errors.honorariosValor}</ErrorText>}
-                </FormGroup>
-
-                <FormGroup>
-                  <Label htmlFor="honorariosTipo">Tipo de Honorários</Label>
-                  <Select
-                    id="honorariosTipo"
-                    name="honorariosTipo"
-                    value={formData.honorariosTipo}
-                    onChange={handleChange}
-                  >
-                    <option value="fixo">Fixo</option>
-                    <option value="percentual">Percentual sobre ganho de causa</option>
-                    <option value="misto">Misto</option>
-                  </Select>
-                </FormGroup>
-              </div>
-
               <FormGroup>
-                <Label htmlFor="advogado">Advogado Responsável</Label>
-                <Select id="advogado" name="advogado" value={formData.advogado} onChange={handleChange}>
-                  <option value="">Selecione o advogado</option>
-                  <option value="Dr. Carlos Mendes">Dr. Carlos Mendes</option>
-                  <option value="Dra. Ana Souza">Dra. Ana Souza</option>
-                  <option value="Dr. Roberto Alves">Dr. Roberto Alves</option>
-                  <option value="Dra. Juliana Costa">Dra. Juliana Costa</option>
-                </Select>
-                {errors.advogado && <ErrorText>{errors.advogado}</ErrorText>}
+                <Label htmlFor="honorariosValor">Valor dos Honorários</Label>
+                <Input
+                  id="honorariosValor"
+                  name="honorariosValor"
+                  placeholder="R$ 0,00"
+                  value={formData.honorariosValor}
+                  onChange={handleChange}
+                />
+                {errors.honorariosValor && <ErrorText>{errors.honorariosValor}</ErrorText>}
               </FormGroup>
 
               <FormGroup>
-                <Label htmlFor="porcentagem">Porcentagem do Advogado (%)</Label>
+                <Label htmlFor="parcelamento">Parcelamento de Honorário</Label>
+                <Input
+                  id="parcelamento"
+                  name="parcelamento"
+                  placeholder="Ex: 10x, 3x"
+                  value={formData.parcelamento}
+                  onChange={handleChange}
+                />
+                {errors.parcelamento && <ErrorText>{errors.parcelamento}</ErrorText>}
+              </FormGroup>
+
+              <FormGroup>
+                <Label htmlFor="porcentagem">Porcentagem do Advogado</Label>
                 <Input
                   id="porcentagem"
                   name="porcentagem"
-                  placeholder="Ex: 30"
+                  placeholder="%"
                   value={formData.porcentagem}
                   onChange={handleChange}
                 />
                 {errors.porcentagem && <ErrorText>{errors.porcentagem}</ErrorText>}
               </FormGroup>
 
-              <FormGroup style={{ gridColumn: "1 / span 2" }}>
-                <Label htmlFor="observacoes">Observações</Label>
-                <Textarea id="observacoes" name="observacoes" value={formData.observacoes} onChange={handleChange} />
+              <FormGroup>
+                <Label htmlFor="dataFechamentoContrato">Data de Fechamento do Contrato</Label>
+                <Input
+                  id="dataFechamentoContrato"
+                  name="dataFechamentoContrato"
+                  type="date"
+                  value={formData.dataFechamentoContrato}
+                  onChange={handleChange}
+                />
+                {errors.dataFechamentoContrato && <ErrorText>{errors.dataFechamentoContrato}</ErrorText>}
+              </FormGroup>
+
+              <FormGroup>
+                <Label htmlFor="advogado">Advogado Responsável</Label>
+                <Input
+                  id="advogado"
+                  name="advogado"
+                  placeholder="Nome do advogado"
+                  value={formData.advogado}
+                  onChange={handleChange}
+                />
+                {errors.advogado && <ErrorText>{errors.advogado}</ErrorText>}
               </FormGroup>
             </FormGrid>
+          </CardContent>
+
+          <CardHeader>
+            <CardTitle>Observações</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FormGroup>
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input
+                id="observacoes"
+                name="observacoes"
+                placeholder="Observações adicionais"
+                value={formData.observacoes}
+                onChange={handleChange}
+              />
+            </FormGroup>
           </CardContent>
 
           <CardFooter>

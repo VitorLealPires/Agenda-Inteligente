@@ -4,30 +4,25 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
-// Carregar variáveis de ambiente
 dotenv.config();
 
 const app = express();
-
-// Middleware
 app.use(express.json());
-app.use(cors({ origin: '*' })); // Permitir todos os domínios. Para produção, restrinja as origens permitidas
+app.use(cors({ origin: "*" }));
 
 // Conectar ao MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('MongoDB conectado'))
-  .catch((err) => console.log('Erro ao conectar ao MongoDB:', err));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB conectado'))
+  .catch(err => console.error('❌ Erro ao conectar ao MongoDB:', err));
 
 // Importando Rotas
 const clienteRoutes = require('./routes/clienteRoutes');
+const authRoutes = require('./routes/auth'); // 👈 Novo
 
-// Usando as rotas para o prefixo '/clientes'
+// Usando Rotas
 app.use('/clientes', clienteRoutes);
+app.use('/auth', authRoutes); // 👈 Novo
 
-// Definir a porta
+// Iniciando o servidor
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
-
+app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));

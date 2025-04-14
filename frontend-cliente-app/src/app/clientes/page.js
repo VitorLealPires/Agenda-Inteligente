@@ -39,53 +39,37 @@ const ActionButton = styled(Button)`
   margin-left: 0.5rem;
 `;
 
-// Dados simulados para a lista de clientes
-const clientsData = [
-  {
-    id: 1,
-    nome: "João Silva",
-    cpf: "123.456.789-00",
-    telefone: "(11) 98765-4321",
-    tipoAcao: "Trabalhista",
-    honorarios: "R$ 3.000,00",
-    advogado: "Dr. Carlos Mendes",
-    porcentagem: "30%",
-  },
-  {
-    id: 2,
-    nome: "Maria Oliveira",
-    cpf: "987.654.321-00",
-    telefone: "(11) 91234-5678",
-    tipoAcao: "Civil",
-    honorarios: "R$ 5.000,00",
-    advogado: "Dra. Ana Souza",
-    porcentagem: "25%",
-  },
-  {
-    id: 3,
-    nome: "Pedro Santos",
-    cpf: "456.789.123-00",
-    telefone: "(11) 95555-9999",
-    tipoAcao: "Previdenciário",
-    honorarios: "R$ 2.500,00",
-    advogado: "Dr. Roberto Alves",
-    porcentagem: "20%",
-  },
-];
-
 export default function ClientsList() {
-  const [clients] = useState(clientsData);
-  const [filteredClients, setFilteredClients] = useState(clientsData);
+  const [clients, setClients] = useState([]);
+  const [filteredClients, setFilteredClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Função para filtrar clientes com base no termo de busca
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`);
+        if (!response.ok) throw new Error("Erro ao buscar clientes");
+
+        const data = await response.json();
+        setClients(data);
+        setFilteredClients(data);
+      } catch (error) {
+        console.error("Erro ao carregar clientes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClients();
+  }, []);
+
   useEffect(() => {
     if (searchTerm.trim() !== "") {
       const filtered = clients.filter(
         (client) =>
-          client.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          client.cpf.includes(searchTerm) ||
-          client.telefone.includes(searchTerm)
+          client.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client.cpf?.includes(searchTerm) ||
+          client.telefone?.includes(searchTerm)
       );
       setFilteredClients(filtered);
     } else {
@@ -93,11 +77,16 @@ export default function ClientsList() {
     }
   }, [searchTerm, clients]);
 
-  // Função para excluir um cliente
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
-      const updatedClients = filteredClients.filter((client) => client.id !== id);
-      setFilteredClients(updatedClients);
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`, {
+          method: "DELETE",
+        });
+        setClients((prev) => prev.filter((client) => client._id !== id));
+      } catch (error) {
+        console.error("Erro ao excluir cliente:", error);
+      }
     }
   };
 
@@ -130,7 +119,7 @@ export default function ClientsList() {
           </SearchContainer>
         </CardContent>
       </Card>
-
+      
       <Card>
         <Table>
           <TableHeader>
@@ -139,43 +128,50 @@ export default function ClientsList() {
               <TableHead>CPF</TableHead>
               <TableHead>Telefone</TableHead>
               <TableHead>Tipo de Ação</TableHead>
-              <TableHead>Honorários</TableHead>
               <TableHead>Advogado</TableHead>
               <TableHead>Ações</TableHead>
             </TableRow>
           </TableHeader>
           <tbody>
-            {filteredClients.length > 0 ? (
-              filteredClients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell>{client.nome}</TableCell>
-                  <TableCell>{client.cpf}</TableCell>
-                  <TableCell>{client.telefone}</TableCell>
-                  <TableCell>{client.tipoAcao}</TableCell>
-                  <TableCell>{client.honorarios}</TableCell>
-                  <TableCell>{client.advogado}</TableCell>
-                  <TableCell>
-                    <TableActions>
-                      <Link href={`/clientes/${client.id}`} passHref>
-                        <ActionButton variant="ghost" size="sm">
-                          <Eye size={16} />
+            {loading ? (
+              <TableRow key="loading">
+                <TableCell colSpan="6" className="text-center py-4">
+                  Carregando clientes...
+                </TableCell>
+              </TableRow>
+            ) : filteredClients.length > 0 ? (
+              filteredClients.map((client) => {
+                const key = client._id || `${client.nome}-${client.cpf}`;
+                return (
+                  <TableRow key={key}>
+                    <TableCell>{client.nome}</TableCell>
+                    <TableCell>{client.cpf}</TableCell>
+                    <TableCell>{client.telefone}</TableCell>
+                    <TableCell>{client.tipoAcao}</TableCell>
+                    <TableCell>{client.advogado}</TableCell>
+                    <TableCell>
+                      <TableActions>
+                        <Link href={`/clientes/${client._id}`} passHref>
+                          <ActionButton variant="ghost" size="sm">
+                            <Eye size={16} />
+                          </ActionButton>
+                        </Link>
+                        <Link href={`/clientes/editar/${client._id}`} passHref>
+                          <ActionButton variant="ghost" size="sm">
+                            <Edit size={16} />
+                          </ActionButton>
+                        </Link>
+                        <ActionButton variant="ghost" size="sm" onClick={() => handleDelete(client._id)}>
+                          <Trash2 size={16} />
                         </ActionButton>
-                      </Link>
-                      <Link href={`/clientes/editar/${client.id}`} passHref>
-                        <ActionButton variant="ghost" size="sm">
-                          <Edit size={16} />
-                        </ActionButton>
-                      </Link>
-                      <ActionButton variant="ghost" size="sm" onClick={() => handleDelete(client.id)}>
-                        <Trash2 size={16} />
-                      </ActionButton>
-                    </TableActions>
-                  </TableCell>
-                </TableRow>
-              ))
+                      </TableActions>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
-              <TableRow>
-                <TableCell colSpan="7" className="text-center py-4">
+              <TableRow key="no-clients">
+                <TableCell colSpan="6" className="text-center py-4">
                   Nenhum cliente encontrado.
                 </TableCell>
               </TableRow>
@@ -186,4 +182,3 @@ export default function ClientsList() {
     </div>
   );
 }
-

@@ -1,202 +1,183 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import styled from "styled-components";
-import { Users, UserPlus, FileText, ArrowUpRight } from "lucide-react";
-import { Card, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableHeader, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import useAuthProtegida from "@/lib/authMiddleware"; // 👈 import do middleware
+import { usePathname, useRouter } from "next/navigation";
+import styled from "styled-components";
+import { Home, Users, UserPlus, FileText, Settings, LogOut, Menu } from "lucide-react";
 
-const DashboardGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+// Sidebar principal
+const SidebarContainer = styled.aside`
+  width: 250px;
+  height: 100vh;
+  background-color: var(--card-background);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  transition: transform 0.3s ease;
 
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
+  @media (max-width: 768px) {
+    transform: translateX(-100%);
+    &.open {
+      transform: translateX(0);
+    }
   }
 `;
 
-const StatCard = styled(Card)`
+// Botão de abrir o menu
+const ToggleButton = styled.button`
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background: none;
+  border: none;
+  color: var(--primary);
+  z-index: 30;
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
+`;
+
+// Overlay de fundo escuro
+const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+
+  @media (min-width: 769px) {
+    display: none;
+  }
+`;
+
+const Logo = styled.div`
+  height: var(--header-height);
   display: flex;
-  flex-direction: column;
-`;
-
-const StatValue = styled.div`
-  font-size: 2rem;
+  align-items: center;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid var(--border);
   font-weight: 700;
-  margin-top: 0.5rem;
-`;
-
-const StatIcon = styled.div`
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const RecentClientsSection = styled.div`
-  margin-top: 2rem;
-`;
-
-const SectionHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-`;
-
-const SectionTitle = styled.h2`
   font-size: 1.25rem;
-  font-weight: 600;
+  color: var(--primary);
 `;
 
-export default function Dashboard() {
-  useAuthProtegida(); // 👈 proteção de rota
+const NavMenu = styled.nav`
+  padding: 1.5rem 0;
+`;
 
-  const [totalClients, setTotalClients] = useState(null);
-  const [activeProcesses, setActiveProcesses] = useState(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState(null);
-  const [recentClients, setRecentClients] = useState([]);
+const NavItem = styled.div`
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  color: ${(props) => (props.active === "true" ? "var(--primary)" : "var(--foreground)")};
+  background-color: ${(props) => (props.active === "true" ? "var(--accent)" : "transparent")};
+  border-left: ${(props) => (props.active === "true" ? "3px solid var(--primary)" : "3px solid transparent")};
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--accent);
+  }
+`;
+
+const NavIcon = styled.span`
+  margin-right: 0.75rem;
+  display: flex;
+  align-items: center;
+`;
+
+const Footer = styled.div`
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+`;
+
+const FooterItem = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0;
+  color: var(--foreground);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--primary);
+  }
+`;
+
+export default function Sidebar() {
+  const [isClient, setIsClient] = useState(false);
+  const [pathname, setPathname] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    async function fetchData() {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error(`Erro ao buscar dados: ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        setTotalClients(data.totalClients || 0);
-        setActiveProcesses(data.activeProcesses || 0);
-        setMonthlyRevenue(data.monthlyRevenue || 0);
-        setRecentClients(data.recentClients || []);
-      } catch (error) {
-        console.error("Erro ao carregar dados do dashboard:", error);
-      }
-    }
-
-    fetchData();
+    setIsClient(true);
+    setPathname(window.location.pathname);
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const navItems = [
+    { icon: <Home size={20} />, label: "Dashboard", path: "/" },
+    { icon: <Users size={20} />, label: "Clientes", path: "/clientes" },
+    { icon: <UserPlus size={20} />, label: "Cadastrar Cliente", path: "/clientes/cadastrar" },
+    { icon: <FileText size={20} />, label: "Relatórios", path: "/relatorios" },
+  ];
+
+  if (!isClient) return null;
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <>
+      <ToggleButton onClick={toggleSidebar}>
+        <Menu size={28} />
+      </ToggleButton>
 
-      <DashboardGrid>
-        <StatCard>
-          <CardContent>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle>Total de Clientes</CardTitle>
-                <StatValue>{totalClients ?? "Carregando..."}</StatValue>
-              </div>
-              <StatIcon>
-                <Users size={24} />
-              </StatIcon>
-            </div>
-          </CardContent>
-        </StatCard>
+      {isOpen && <Overlay onClick={toggleSidebar} />}
 
-        <StatCard>
-          <CardContent>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle>Processos Ativos</CardTitle>
-                <StatValue>{activeProcesses ?? "Carregando..."}</StatValue>
-              </div>
-              <StatIcon>
-                <FileText size={24} />
-              </StatIcon>
-            </div>
-          </CardContent>
-        </StatCard>
+      <SidebarContainer className={isOpen ? "open" : ""}>
+        <Logo>Mauricio Advocacia</Logo>
 
-        <StatCard>
-          <CardContent>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle>Faturamento Mensal</CardTitle>
-                <StatValue>{monthlyRevenue ?? "Carregando..."}</StatValue>
-              </div>
-              <StatIcon>
-                <ArrowUpRight size={24} />
-              </StatIcon>
-            </div>
-          </CardContent>
-        </StatCard>
-      </DashboardGrid>
+        <NavMenu>
+          {navItems.map((item) => (
+            <Link href={item.path} key={item.path} passHref>
+              <NavItem active={pathname === item.path ? "true" : "false"}>
+                <NavIcon>{item.icon}</NavIcon>
+                {item.label}
+              </NavItem>
+            </Link>
+          ))}
+        </NavMenu>
 
-      <RecentClientsSection>
-        <SectionHeader>
-          <SectionTitle>Clientes Recentes</SectionTitle>
-          <Link href="/clientes">
-            <Button variant="outline" size="sm">Ver Todos</Button>
+        <Footer>
+          <Link href="/configuracoes">
+            <FooterItem>
+              <NavIcon>
+                <Settings size={20} />
+              </NavIcon>
+              Configurações
+            </FooterItem>
           </Link>
-        </SectionHeader>
-
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>CPF</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Tipo de Ação</TableHead>
-                <TableHead>Advogado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <tbody>
-              {recentClients && recentClients.length > 0 ? (
-                recentClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell>{client.nome}</TableCell>
-                    <TableCell>{client.cpf}</TableCell>
-                    <TableCell>{client.telefone}</TableCell>
-                    <TableCell>{client.tipoAcao}</TableCell>
-                    <TableCell>{client.advogado}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan="5" className="text-center">
-                    Nenhum cliente recente
-                  </TableCell>
-                </TableRow>
-              )}
-            </tbody>
-          </Table>
-        </Card>
-      </RecentClientsSection>
-
-      <div className="mt-6">
-        <Link href="/clientes/cadastrar">
-          <Button>
-            <UserPlus size={18} className="mr-2" />
-            Cadastrar Novo Cliente
-          </Button>
-        </Link>
-      </div>
-    </div>
+          <FooterItem onClick={handleLogout}>
+            <NavIcon>
+              <LogOut size={20} />
+            </NavIcon>
+            Sair
+          </FooterItem>
+        </Footer>
+      </SidebarContainer>
+    </>
   );
 }

@@ -17,11 +17,13 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Importando Rotas
 const clienteRoutes = require('./routes/clienteRoutes');
-const authRoutes = require('./routes/auth'); // 👈 Novo
+const authRoutes = require('./routes/auth');
+const acaoRoutes = require('./routes/acaoRoutes');
 
-// Usando Rotas
-app.use('/clientes', clienteRoutes);
-app.use('/auth', authRoutes); // 👈 Novo
+// Usando Rotas (padronizado com /api)
+app.use('/api/clientes', clienteRoutes);
+app.use('/api/acoes', acaoRoutes);
+app.use('/api/auth', authRoutes);
 
 // Iniciando o servidor
 const PORT = process.env.PORT || 5000;

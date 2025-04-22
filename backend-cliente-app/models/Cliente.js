@@ -1,20 +1,13 @@
+// models/Cliente.js
 const mongoose = require('mongoose');
 
 const ClienteSchema = new mongoose.Schema({
   nome: { type: String, required: true },
-  cpf: { type: String, required: true },
+  cpf: { type: String, required: true }, // Removido o unique: true
   telefone: { type: String, required: true },
-  tipoAcao: { type: String, required: true },
-  honorarios: { 
-    valor: { type: Number, required: true },       // Exemplo: 5000
-    parcelamento: { type: String, required: false } // Exemplo: "10x", "3x"
-  },
-  advogado: { type: String, required: true },
-  porcentagemAdvogado: { type: Number, required: true },
-  observacoes: { type: String }, // Campo opcional
 
-  // Novo campo para data de fechamento do contrato
-  dataFechamentoContrato: { type: Date, required: true }
+  // Ações associadas a este cliente
+  acoes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Acao' }]
 });
 
 module.exports = mongoose.model('Cliente', ClienteSchema);

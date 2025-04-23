@@ -21,9 +21,9 @@ const authRoutes = require('./routes/auth');
 const acaoRoutes = require('./routes/acaoRoutes');
 
 // Usando Rotas (padronizado com /api)
-app.use('/api/clientes', clienteRoutes);
-app.use('/api/acoes', acaoRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/clientes', clienteRoutes);
+app.use('/acoes', acaoRoutes);
+app.use('/auth', authRoutes);
 
 // Iniciando o servidor
 const PORT = process.env.PORT || 5000;

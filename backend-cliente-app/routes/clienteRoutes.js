@@ -5,11 +5,11 @@ const router = express.Router();
 
 // Criar um novo cliente
 router.post('/', async (req, res) => {
-  try {
+  try {    
     const novoCliente = new Cliente(req.body);
     await novoCliente.save();
     res.status(201).json(novoCliente);
-  } catch (error) {
+  } catch (error) {    
     res.status(500).json({ message: 'Erro ao cadastrar cliente', error });
   }
 });

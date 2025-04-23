@@ -74,29 +74,45 @@ export default function CadastrarAcao() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!clienteSelecionado) {
       alert("Selecione um cliente para vincular à ação.");
       return;
     }
-
+  
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/acoes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          clienteId: clienteSelecionado._id,
-        }),
-      });
-
+      const token = localStorage.getItem("token");
+  
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/acoes/${clienteSelecionado._id}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            tipoAcao: formData.tipoAcao,
+            advogado: formData.advogado,
+            porcentagemAdvogado: formData.porcentagemAdvogado,
+            observacoes: formData.observacoes,
+            dataFechamentoContrato: formData.dataFechamentoContrato,
+            honorarios: {
+              valor: formData.valorHonorario,
+              parcelamento: formData.parcelamentoHonorario,
+            },
+          }),
+        }
+      );
+  
       if (!response.ok) throw new Error("Erro ao cadastrar ação");
-
+  
       router.push("/dashboard");
     } catch (err) {
       console.error("Erro ao enviar formulário:", err);
     }
   };
+  
 
   return (
     <Card className="max-w-xl mx-auto mt-8">

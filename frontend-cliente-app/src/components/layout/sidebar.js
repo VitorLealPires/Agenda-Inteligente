@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styled from "styled-components";
-import { Home, Users, UserPlus, FileText, Settings, LogOut, Gavel } from "lucide-react";
+import { Home, Users, UserPlus, FileText, Settings, LogOut, Gavel, PlusCircle } from "lucide-react";
 
 const SidebarContainer = styled.aside`
   width: 250px;
@@ -100,7 +100,8 @@ export default function Sidebar() {
     { icon: <Home size={20} />, label: "Dashboard", path: "/" },
     { icon: <Users size={20} />, label: "Clientes", path: "/clientes" },
     { icon: <UserPlus size={20} />, label: "Cadastrar Cliente", path: "/clientes/cadastrar" },
-    { icon: <Gavel size={20} />, label: "Ações", path: "/acoes" }, // <- Nova entrada confirmada
+    { icon: <Gavel size={20} />, label: "Listar Ações", path: "/acoes" },
+    { icon: <PlusCircle size={20} />, label: "Cadastrar Ação", path: "/acoes/cadastrar" },
     { icon: <FileText size={20} />, label: "Relatórios", path: "/relatorios" },
   ];
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styled from "styled-components";
-import { Home, Users, UserPlus, FileText, Settings, LogOut } from "lucide-react";
+import { Home, Users, UserPlus, FileText, Settings, LogOut, Gavel } from "lucide-react";
 
 const SidebarContainer = styled.aside`
   width: 250px;
@@ -19,7 +19,6 @@ const SidebarContainer = styled.aside`
 
   @media (max-width: 768px) {
     transform: translateX(-100%);
-    
     &.open {
       transform: translateX(0);
     }
@@ -50,7 +49,7 @@ const NavItem = styled.div`
   background-color: ${(props) => (props.active === "true" ? "var(--accent)" : "transparent")};
   border-left: ${(props) => (props.active === "true" ? "3px solid var(--primary)" : "3px solid transparent")};
   transition: all 0.2s;
-  
+
   &:hover {
     background-color: var(--accent);
   }
@@ -76,7 +75,7 @@ const FooterItem = styled.div`
   padding: 0.75rem 0;
   color: var(--foreground);
   cursor: pointer;
-  
+
   &:hover {
     color: var(--primary);
   }
@@ -101,6 +100,7 @@ export default function Sidebar() {
     { icon: <Home size={20} />, label: "Dashboard", path: "/" },
     { icon: <Users size={20} />, label: "Clientes", path: "/clientes" },
     { icon: <UserPlus size={20} />, label: "Cadastrar Cliente", path: "/clientes/cadastrar" },
+    { icon: <Gavel size={20} />, label: "Ações", path: "/acoes" }, // <- Nova entrada confirmada
     { icon: <FileText size={20} />, label: "Relatórios", path: "/relatorios" },
   ];
 

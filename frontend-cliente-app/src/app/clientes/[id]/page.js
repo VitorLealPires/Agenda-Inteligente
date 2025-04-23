@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styled from "styled-components";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, PlusCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -49,11 +49,23 @@ const InfoValue = styled.div`
   font-weight: 500;
 `;
 
+const AcoesContainer = styled.div`
+  margin-top: 2rem;
+`;
+
+const AcaoItem = styled.div`
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+`;
+
 export default function ClientDetails() {
   const params = useParams();
   const router = useRouter();
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [acoes, setAcoes] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -87,7 +99,28 @@ export default function ClientDetails() {
       }
     };
 
+    const fetchAcoesDoCliente = async () => {
+      try {
+        const clientId = params.id;
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/acoes/cliente/${clientId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Erro ao buscar ações");
+        }
+
+        const data = await res.json();
+        setAcoes(data);
+      } catch (error) {
+        console.error("Erro ao buscar ações do cliente:", error);
+      }
+    };
+
     fetchClientData();
+    fetchAcoesDoCliente();
   }, [params.id, router]);
 
   const handleDelete = async () => {
@@ -227,6 +260,22 @@ export default function ClientDetails() {
             <InfoLabel>Observações</InfoLabel>
             <InfoValue>{observacoes || "Nenhuma observação registrada."}</InfoValue>
           </InfoGroup>
+
+          <AcoesContainer>
+            <h2 className="text-xl font-semibold mb-3">Ações Relacionadas</h2>
+            {acoes.length === 0 ? (
+              <p>Nenhuma ação cadastrada para este cliente.</p>
+            ) : (
+              acoes.map((acao) => (
+                <AcaoItem key={acao._id}>
+                  <strong>Tipo:</strong> {acao.tipoAcao || "N/A"}<br />
+                  <strong>Data de Início:</strong> {acao.dataInicio ? new Date(acao.dataInicio).toLocaleDateString("pt-BR") : "N/A"}<br />
+                  <strong>Status:</strong> {acao.status || "N/A"}<br />
+                  <strong>Observações:</strong> {acao.observacoes || "Nenhuma"}
+                </AcaoItem>
+              ))
+            )}
+          </AcoesContainer>
         </CardContent>
 
         <CardFooter>
@@ -236,6 +285,14 @@ export default function ClientDetails() {
               Editar
             </Button>
           </Link>
+
+          <Link href={`/acoes/cadastrar?clienteId=${client._id}`}>
+            <Button variant="default" className="mr-2">
+              <PlusCircle size={18} />
+              Nova Ação
+            </Button>
+          </Link>
+
           <Button variant="destructive" onClick={handleDelete}>
             <Trash2 size={18} />
             Excluir

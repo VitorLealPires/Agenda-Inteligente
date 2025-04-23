@@ -24,28 +24,28 @@ router.post('/:clienteId', async (req, res) => {
   }
 });
 
-// Buscar todas as ações
+// Buscar todas as ações (com cliente populado)
 router.get('/', async (req, res) => {
   try {
-    const acoes = await Acao.find().populate('cliente');
+    const acoes = await Acao.find().populate('cliente'); // <- populando cliente
     res.json(acoes);
   } catch (error) {
     res.status(500).json({ message: 'Erro ao buscar ações', error });
   }
 });
 
-// Buscar ações de um cliente específico
+// Buscar ações de um cliente específico (com cliente populado opcional)
 router.get('/cliente/:clienteId', async (req, res) => {
   try {
     const { clienteId } = req.params;
-    const acoes = await Acao.find({ cliente: clienteId });
+    const acoes = await Acao.find({ cliente: clienteId }).populate('cliente');
     res.json(acoes);
   } catch (error) {
     res.status(500).json({ message: 'Erro ao buscar ações do cliente', error });
   }
 });
 
-// Buscar uma ação por ID
+// Buscar uma ação por ID (com cliente populado)
 router.get('/:id', async (req, res) => {
   try {
     const acao = await Acao.findById(req.params.id).populate('cliente');

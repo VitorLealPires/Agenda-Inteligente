@@ -41,13 +41,6 @@ export default function ClientRegister() {
     nome: "",
     cpf: "",
     telefone: "",
-    tipoAcao: "",
-    honorariosValor: "",
-    advogado: "",
-    porcentagem: "",
-    observacoes: "",
-    parcelamento: "",
-    dataFechamentoContrato: "",
   })
 
   const [errors, setErrors] = useState({})
@@ -68,12 +61,6 @@ export default function ClientRegister() {
     if (!formData.nome.trim()) newErrors.nome = "Nome é obrigatório"
     if (!formData.cpf.trim()) newErrors.cpf = "CPF é obrigatório"
     if (!formData.telefone.trim()) newErrors.telefone = "Telefone é obrigatório"
-    if (!formData.tipoAcao) newErrors.tipoAcao = "Tipo de ação é obrigatório"
-    if (!formData.honorariosValor.trim()) newErrors.honorariosValor = "Valor dos honorários é obrigatório"
-    if (!formData.parcelamento.trim()) newErrors.parcelamento = "Parcelamento é obrigatório"
-    if (!formData.advogado) newErrors.advogado = "Advogado responsável é obrigatório"
-    if (!formData.porcentagem.trim()) newErrors.porcentagem = "Porcentagem do advogado é obrigatória"
-    if (!formData.dataFechamentoContrato.trim()) newErrors.dataFechamentoContrato = "Data de fechamento é obrigatória"
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -87,7 +74,6 @@ export default function ClientRegister() {
     setIsSubmitting(true)
 
     try {
-      // 1. Cadastra o cliente
       const clienteResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,36 +90,10 @@ export default function ClientRegister() {
         throw new Error(clienteData.message || "Erro ao criar cliente")
       }
 
-      const clienteId = clienteData._id
-
-      // 2. Cadastra a primeira ação vinculada ao cliente
-      const acaoResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/acoes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clienteId,
-          tipoAcao: formData.tipoAcao,
-          honorarios: {
-            valor: formData.honorariosValor,
-            parcelamento: formData.parcelamento,
-          },
-          advogado: formData.advogado,
-          porcentagemAdvogado: formData.porcentagem,
-          dataFechamentoContrato: formData.dataFechamentoContrato,
-          observacoes: formData.observacoes,
-        }),
-      })
-
-      const acaoData = await acaoResponse.json()
-
-      if (!acaoResponse.ok) {
-        throw new Error(acaoData.message || "Erro ao criar ação")
-      }
-
       router.push("/clientes")
     } catch (error) {
       console.error("Erro ao cadastrar:", error)
-      alert(`Erro ao cadastrar cliente ou ação: ${error.message}`)
+      alert(`Erro ao cadastrar cliente: ${error.message}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -179,59 +139,6 @@ export default function ClientRegister() {
             </FormGrid>
           </CardContent>
 
-          <CardHeader>
-            <CardTitle>Informações do Processo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FormGrid>
-              <FormGroup>
-                <Label htmlFor="tipoAcao">Tipo de Ação</Label>
-                <Input id="tipoAcao" name="tipoAcao" value={formData.tipoAcao} onChange={handleChange} />
-                {errors.tipoAcao && <ErrorText>{errors.tipoAcao}</ErrorText>}
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="honorariosValor">Valor dos Honorários</Label>
-                <Input id="honorariosValor" name="honorariosValor" value={formData.honorariosValor} onChange={handleChange} />
-                {errors.honorariosValor && <ErrorText>{errors.honorariosValor}</ErrorText>}
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="parcelamento">Parcelamento de Honorário</Label>
-                <Input id="parcelamento" name="parcelamento" value={formData.parcelamento} onChange={handleChange} />
-                {errors.parcelamento && <ErrorText>{errors.parcelamento}</ErrorText>}
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="porcentagem">Porcentagem do Advogado</Label>
-                <Input id="porcentagem" name="porcentagem" value={formData.porcentagem} onChange={handleChange} />
-                {errors.porcentagem && <ErrorText>{errors.porcentagem}</ErrorText>}
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="dataFechamentoContrato">Data de Fechamento do Contrato</Label>
-                <Input type="date" id="dataFechamentoContrato" name="dataFechamentoContrato" value={formData.dataFechamentoContrato} onChange={handleChange} />
-                {errors.dataFechamentoContrato && <ErrorText>{errors.dataFechamentoContrato}</ErrorText>}
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="advogado">Advogado Responsável</Label>
-                <Input id="advogado" name="advogado" value={formData.advogado} onChange={handleChange} />
-                {errors.advogado && <ErrorText>{errors.advogado}</ErrorText>}
-              </FormGroup>
-            </FormGrid>
-          </CardContent>
-
-          <CardHeader>
-            <CardTitle>Observações</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FormGroup>
-              <Label htmlFor="observacoes">Observações</Label>
-              <Input id="observacoes" name="observacoes" value={formData.observacoes} onChange={handleChange} />
-            </FormGroup>
-          </CardContent>
-
           <CardFooter>
             <Button type="submit" disabled={isSubmitting}>
               <Save size={18} />
@@ -243,4 +150,3 @@ export default function ClientRegister() {
     </FormContainer>
   )
 }
-

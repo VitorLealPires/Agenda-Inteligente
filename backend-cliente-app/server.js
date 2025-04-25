@@ -8,7 +8,17 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+
+// Configuração de CORS para produção (Vercel) e local
+const allowedOrigins = [
+  "https://agenda-inteligente.vercel.app",
+  "http://localhost:3000"
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 
 // Conectar ao MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -20,7 +30,7 @@ const clienteRoutes = require('./routes/clienteRoutes');
 const authRoutes = require('./routes/auth');
 const acaoRoutes = require('./routes/acaoRoutes');
 
-// Usando Rotas (padronizado com /api)
+// Usando Rotas
 app.use('/clientes', clienteRoutes);
 app.use('/acoes', acaoRoutes);
 app.use('/auth', authRoutes);

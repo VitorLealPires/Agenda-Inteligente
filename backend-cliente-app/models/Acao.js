@@ -15,7 +15,7 @@ const AcaoSchema = new mongoose.Schema({
   dataFechamentoContrato: { type: Date, required: true },
 
   // Relaciona a ação com um cliente
-  clienteId: { type: mongoose.Schema.Types.ObjectId, ref: 'Cliente', required: true }
+  cliente: { type: mongoose.Schema.Types.ObjectId, ref: 'Cliente', required: true }
 });
 
 module.exports = mongoose.model('Acao', AcaoSchema);

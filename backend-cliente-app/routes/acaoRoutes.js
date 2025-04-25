@@ -3,14 +3,21 @@ const express = require('express');
 const router = express.Router();
 const Acao = require('../models/Acao');
 const Cliente = require('../models/Cliente');
+const mongoose = require('mongoose');
 
 // Criar nova ação para um cliente
 router.post('/:clienteId', async (req, res) => {
   try {
     const { clienteId } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(clienteId)) {
+      return res.status(400).json({ message: 'ID de cliente inválido' });
+    }
+
     const cliente = await Cliente.findById(clienteId);
-    if (!cliente) return res.status(404).json({ message: 'Cliente não encontrado' });
+    if (!cliente) {
+      return res.status(404).json({ message: 'Cliente não encontrado' });
+    }
 
     const {
       tipoAcao,
@@ -21,7 +28,7 @@ router.post('/:clienteId', async (req, res) => {
       honorarios
     } = req.body;
 
-    // Validação simples
+    // Validação básica
     if (!tipoAcao || !advogado || !honorarios || !honorarios.valor) {
       return res.status(400).json({ message: 'Campos obrigatórios faltando' });
     }
@@ -44,7 +51,7 @@ router.post('/:clienteId', async (req, res) => {
 
     res.status(201).json(acaoSalva);
   } catch (error) {
-    console.error('Erro ao criar ação:', error); // Log detalhado no console
+    console.error('Erro ao criar ação:', error);
     res.status(500).json({ message: 'Erro ao criar ação', error: error.message });
   }
 });
@@ -63,6 +70,11 @@ router.get('/', async (req, res) => {
 router.get('/cliente/:clienteId', async (req, res) => {
   try {
     const { clienteId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(clienteId)) {
+      return res.status(400).json({ message: 'ID de cliente inválido' });
+    }
+
     const acoes = await Acao.find({ cliente: clienteId }).populate('cliente');
     res.json(acoes);
   } catch (error) {

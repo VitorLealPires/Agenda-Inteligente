@@ -82,6 +82,33 @@ router.get('/cliente/:clienteId', async (req, res) => {
   }
 });
 
+// Buscar ações por nome ou CPF do cliente
+router.get('/buscar', async (req, res) => {
+  try {
+    const { termo } = req.query;
+
+    if (!termo) {
+      return res.status(400).json({ message: 'Termo de busca não fornecido' });
+    }
+
+    // Busca clientes que combinem com o nome ou CPF
+    const clientes = await Cliente.find({
+      $or: [
+        { nome: new RegExp(termo, 'i') },
+        { cpf: new RegExp(termo, 'i') }
+      ]
+    });
+
+    const clienteIds = clientes.map(cliente => cliente._id);
+
+    const acoes = await Acao.find({ cliente: { $in: clienteIds } }).populate('cliente');
+
+    res.json(acoes);
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao buscar ações por cliente', error: error.message });
+  }
+});
+
 // Buscar uma ação por ID
 router.get('/:id', async (req, res) => {
   try {
@@ -124,4 +151,3 @@ router.delete('/:id', async (req, res) => {
 });
 
 module.exports = router;
-

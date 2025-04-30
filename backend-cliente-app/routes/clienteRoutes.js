@@ -5,11 +5,23 @@ const router = express.Router();
 
 // Criar um novo cliente
 router.post('/', async (req, res) => {
-  try {    
-    const novoCliente = new Cliente(req.body);
+  try {
+    const { nome, cpf, telefones } = req.body;
+
+    // Validação simples opcional
+    if (!Array.isArray(telefones)) {
+      return res.status(400).json({ message: 'O campo "telefones" deve ser um array de strings' });
+    }
+
+    const novoCliente = new Cliente({
+      nome,
+      cpf,
+      telefones,
+    });
+
     await novoCliente.save();
     res.status(201).json(novoCliente);
-  } catch (error) {    
+  } catch (error) {
     res.status(500).json({ message: 'Erro ao cadastrar cliente', error });
   }
 });

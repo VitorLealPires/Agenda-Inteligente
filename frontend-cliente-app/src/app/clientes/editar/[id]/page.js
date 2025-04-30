@@ -19,7 +19,7 @@ export default function EditarCliente() {
   const [cliente, setCliente] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Verificação de autenticação
+  // Autenticação
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -27,6 +27,7 @@ export default function EditarCliente() {
     }
   }, [router]);
 
+  // Buscar cliente
   useEffect(() => {
     const fetchCliente = async () => {
       try {
@@ -46,52 +47,44 @@ export default function EditarCliente() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    if (name === 'parcelamentoHonorario') {
-      setCliente((prev) => ({
-        ...prev,
-        honorarios: {
-          ...prev.honorarios,
-          parcelamento: value,
-        },
-      }));
-    } else {
-      setCliente((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
-
-  const handleHonorariosChange = (e) => {
-    const { name, value } = e.target;
     setCliente((prev) => ({
       ...prev,
-      honorarios: {
-        ...prev.honorarios,
-        [name]: value,
-      },
+      [name]: value,
+    }));
+  };
+
+  const handleTelefoneChange = (index, value) => {
+    const novosTelefones = [...cliente.telefones];
+    novosTelefones[index] = value;
+    setCliente((prev) => ({
+      ...prev,
+      telefones: novosTelefones,
+    }));
+  };
+
+  const adicionarTelefone = () => {
+    setCliente((prev) => ({
+      ...prev,
+      telefones: [...(prev.telefones || []), ''],
+    }));
+  };
+
+  const removerTelefone = (index) => {
+    const novosTelefones = cliente.telefones.filter((_, i) => i !== index);
+    setCliente((prev) => ({
+      ...prev,
+      telefones: novosTelefones,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const dataAjustada = cliente.dataFechamentoContrato?.slice(0, 10);
-    const dataFormatada = dataAjustada
-      ? new Date(`${dataAjustada}T12:00:00.000Z`).toISOString()
-      : null;
-
-    const clienteAtualizado = {
-      ...cliente,
-      dataFechamentoContrato: dataFormatada,
-    };
-
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clienteAtualizado),
+        body: JSON.stringify(cliente),
       });
 
       if (!res.ok) throw new Error('Erro ao atualizar cliente');
@@ -115,55 +108,38 @@ export default function EditarCliente() {
           <StyledLabel>Nome</StyledLabel>
           <StyledInput name="nome" value={cliente.nome || ''} onChange={handleChange} />
         </FormGroup>
+
         <FormGroup>
           <StyledLabel>CPF</StyledLabel>
           <StyledInput name="cpf" value={cliente.cpf || ''} onChange={handleChange} />
         </FormGroup>
+
         <FormGroup>
-          <StyledLabel>Telefone</StyledLabel>
-          <StyledInput name="telefone" value={cliente.telefone || ''} onChange={handleChange} />
+          <StyledLabel>Telefones</StyledLabel>
+          {cliente.telefones?.map((telefone, index) => (
+            <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <StyledInput
+                type="text"
+                value={telefone}
+                onChange={(e) => handleTelefoneChange(index, e.target.value)}
+              />
+              <StyledButton type="button" onClick={() => removerTelefone(index)}>
+                Remover
+              </StyledButton>
+            </div>
+          ))}
+          <StyledButton type="button" onClick={adicionarTelefone}>
+            Adicionar Telefone
+          </StyledButton>
         </FormGroup>
-        <FormGroup>
-          <StyledLabel>Tipo de Ação</StyledLabel>
-          <StyledInput name="tipoAcao" value={cliente.tipoAcao || ''} onChange={handleChange} />
-        </FormGroup>
-        <FormGroup>
-          <StyledLabel>Advogado Responsável</StyledLabel>
-          <StyledInput name="advogado" value={cliente.advogado || ''} onChange={handleChange} />
-        </FormGroup>
-        <FormGroup>
-          <StyledLabel>Porcentagem do Advogado (%)</StyledLabel>
-          <StyledInput name="porcentagemAdvogado" value={cliente.porcentagemAdvogado || ''} onChange={handleChange} />
-        </FormGroup>
-        <FormGroup>
-          <StyledLabel>Valor dos Honorários</StyledLabel>
-          <StyledInput name="valor" value={cliente.honorarios?.valor || ''} onChange={handleHonorariosChange} />
-        </FormGroup>
-        <FormGroup>
-          <StyledLabel>Parcelamento de Honorário</StyledLabel>
-          <StyledInput
-            name="parcelamentoHonorario"
-            value={cliente.honorarios?.parcelamento || ''}
-            onChange={handleChange}
-          />
-        </FormGroup>
-        <FormGroup>
-          <StyledLabel>Data de Fechamento do Contrato</StyledLabel>
-          <StyledInput
-            type="date"
-            name="dataFechamentoContrato"
-            value={cliente.dataFechamentoContrato?.slice(0, 10) || ''}
-            onChange={handleChange}
-          />
-        </FormGroup>
+
         <FormGroup>
           <StyledLabel>Observações</StyledLabel>
           <StyledTextarea name="observacoes" value={cliente.observacoes || ''} onChange={handleChange} />
         </FormGroup>
+
         <StyledButton type="submit">Salvar Alterações</StyledButton>
       </Form>
     </Container>
   );
 }
-
-

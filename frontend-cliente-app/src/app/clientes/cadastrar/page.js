@@ -69,11 +69,21 @@ export default function ClientRegister() {
   }
 
   const addTelefone = () => {
-    const tel = formData.telefoneTemp.trim()
-    if (tel && !formData.telefones.includes(tel)) {
+    let tel = formData.telefoneTemp.trim()
+
+    // Remove tudo que não for número
+    const onlyDigits = tel.replace(/\D/g, "")
+
+    // Validação: deve ter 10 ou 11 dígitos (com DDD)
+    if (onlyDigits.length < 10 || onlyDigits.length > 11) return
+
+    // Padronização: +55 (Brasil) + número
+    const formatted = `+55${onlyDigits}`
+
+    if (!formData.telefones.includes(formatted)) {
       setFormData((prev) => ({
         ...prev,
-        telefones: [...prev.telefones, tel],
+        telefones: [...prev.telefones, formatted],
         telefoneTemp: "",
       }))
     }
@@ -90,7 +100,6 @@ export default function ClientRegister() {
     const newErrors = {}
     if (!formData.nome.trim()) newErrors.nome = "Nome é obrigatório"
     if (!formData.cpf.trim()) newErrors.cpf = "CPF é obrigatório"
-    // Telefone não é obrigatório, mas se for preenchido, deve ter pelo menos 1 número válido
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -107,7 +116,7 @@ export default function ClientRegister() {
         body: JSON.stringify({
           nome: formData.nome,
           cpf: formData.cpf,
-          telefone: formData.telefones, // agora é array
+          telefones: formData.telefones, // <- Correção aqui
         }),
       })
 

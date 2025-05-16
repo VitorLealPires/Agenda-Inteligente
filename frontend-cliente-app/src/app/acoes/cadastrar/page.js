@@ -83,15 +83,15 @@ export default function CadastrarAcao() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!clienteSelecionado) {
       alert("Selecione um cliente para vincular à ação.");
       return;
     }
-  
+
     try {
       const token = localStorage.getItem("token");
-  
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/acoes/${clienteSelecionado._id}`,
         {
@@ -113,15 +113,14 @@ export default function CadastrarAcao() {
           }),
         }
       );
-  
+
       if (!response.ok) throw new Error("Erro ao cadastrar ação");
-  
+
       router.push("/dashboard");
     } catch (err) {
       console.error("Erro ao enviar formulário:", err);
     }
   };
-  
 
   return (
     <Card className="max-w-xl mx-auto mt-8">
@@ -202,12 +201,11 @@ export default function CadastrarAcao() {
 
           <div className="mb-4">
             <label>Observações</label>
-            <textarea
+            <TextArea
               name="observacoes"
               rows={6}
               value={formData.observacoes}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md p-2"
               placeholder="Digite observações adicionais..."
             />
           </div>

@@ -4,8 +4,15 @@ import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import { Edit, Trash2, Eye, UserPlus, Search } from "lucide-react";
-import {Card,CardHeader,CardTitle,CardContent} from "@/components/ui/card";
-import {Table,TableHeader,TableRow,TableHead,TableCell,TableActions} from "@/components/ui/table";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableActions
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -102,7 +109,7 @@ export default function ClientsList() {
         (client) =>
           client.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           client.cpf?.includes(searchTerm) ||
-          client.telefone?.includes(searchTerm)
+          client.telefones?.some((t) => t.includes(searchTerm))
       );
     }
 
@@ -217,9 +224,13 @@ export default function ClientsList() {
                   <TableRow key={key}>
                     <TableCell>{client.nome}</TableCell>
                     <TableCell>{client.cpf}</TableCell>
-                    <TableCell>{client.telefone}</TableCell>
-                    <TableCell>{client.tipoAcao}</TableCell>
-                    <TableCell>{client.advogado}</TableCell>
+                    <TableCell>
+                      {client.telefones?.length > 0
+                        ? client.telefones.join(", ")
+                        : "—"}
+                    </TableCell>
+                    <TableCell>{client.tipoAcao || "—"}</TableCell>
+                    <TableCell>{client.advogado || "—"}</TableCell>
                     <TableCell>
                       <TableActions>
                         <Link href={`/clientes/${client._id}`} passHref>
@@ -257,4 +268,3 @@ export default function ClientsList() {
     </div>
   );
 }
-

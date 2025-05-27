@@ -1,22 +1,20 @@
-// routes/clienteRoutes.js
-const express = require('express');
-const Cliente = require('../models/Cliente');
-const router = express.Router();
-
-// Criar um novo cliente
 router.post('/', async (req, res) => {
   try {
     const { nome, cpf, telefones } = req.body;
 
-    // Validação simples opcional
-    if (!Array.isArray(telefones)) {
-      return res.status(400).json({ message: 'O campo "telefones" deve ser um array de strings' });
+    // Se o campo 'telefones' vier como string simples, transforma em array
+    let numerosFormatados = [];
+
+    if (Array.isArray(telefones)) {
+      numerosFormatados = telefones.map(num => formatarNumero(num)).filter(Boolean);
+    } else if (typeof telefones === 'string' && telefones.trim() !== '') {
+      numerosFormatados = [formatarNumero(telefones)].filter(Boolean);
     }
 
     const novoCliente = new Cliente({
       nome,
       cpf,
-      telefones,
+      telefones: numerosFormatados
     });
 
     await novoCliente.save();
@@ -26,53 +24,24 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Buscar todos os clientes
-router.get('/', async (req, res) => {
-  try {
-    const clientes = await Cliente.find();
-    res.json(clientes);
-  } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar clientes', error });
-  }
-});
+// Função para formatar o número no padrão internacional
+function formatarNumero(numero) {
+  if (!numero) return null;
 
-// Buscar um cliente por ID
-router.get('/:id', async (req, res) => {
-  try {
-    const cliente = await Cliente.findById(req.params.id);
-    if (!cliente) {
-      return res.status(404).json({ message: 'Cliente não encontrado' });
-    }
-    res.json(cliente);
-  } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar cliente', error });
-  }
-});
+  const apenasNumeros = numero.replace(/\D/g, '');
 
-// Atualizar um cliente por ID
-router.put('/:id', async (req, res) => {
-  try {
-    const clienteAtualizado = await Cliente.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!clienteAtualizado) {
-      return res.status(404).json({ message: 'Cliente não encontrado' });
-    }
-    res.json(clienteAtualizado);
-  } catch (error) {
-    res.status(500).json({ message: 'Erro ao atualizar cliente', error });
+  if (apenasNumeros.length === 11 && apenasNumeros.startsWith('0')) {
+    // Remove o zero inicial se existir (ex: 011999999999)
+    return `+55${apenasNumeros.substring(1)}`;
   }
-});
 
-// Deletar um cliente por ID
-router.delete('/:id', async (req, res) => {
-  try {
-    const clienteDeletado = await Cliente.findByIdAndDelete(req.params.id);
-    if (!clienteDeletado) {
-      return res.status(404).json({ message: 'Cliente não encontrado' });
-    }
-    res.json({ message: 'Cliente deletado com sucesso' });
-  } catch (error) {
-    res.status(500).json({ message: 'Erro ao deletar cliente', error });
+  if (apenasNumeros.length === 11) {
+    return `+55${apenasNumeros}`;
   }
-});
 
-module.exports = router;
+  if (apenasNumeros.length === 13 && apenasNumeros.startsWith('55')) {
+    return `+${apenasNumeros}`;
+  }
+
+  return null; // Ignora número inválido
+}

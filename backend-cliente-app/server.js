@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 
 dotenv.config();
 
@@ -21,20 +22,36 @@ app.use(cors({
 }));
 
 // Conectar ao MongoDB
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
   .then(() => console.log('✅ MongoDB conectado'))
   .catch(err => console.error('❌ Erro ao conectar ao MongoDB:', err));
 
-// Importando Rotas
-const clienteRoutes = require('./routes/clienteRoutes');
-const authRoutes = require('./routes/auth');
-const acaoRoutes = require('./routes/acaoRoutes');
+// Importando Rotas com try-catch para facilitar debug
+try {
+  const clienteRoutes = require('./routes/clienteRoutes');
+  app.use('/clientes', clienteRoutes);
+} catch (err) {
+  console.error('Erro ao carregar clienteRoutes:', err);
+}
 
-// Usando Rotas
-app.use('/clientes', clienteRoutes);
-app.use('/acoes', acaoRoutes);
-app.use('/auth', authRoutes);
+try {
+  const acaoRoutes = require('./routes/acaoRoutes');
+  app.use('/acoes', acaoRoutes);
+} catch (err) {
+  console.error('Erro ao carregar acaoRoutes:', err);
+}
+
+try {
+  const authRoutes = require('./routes/auth');
+  app.use('/auth', authRoutes);
+} catch (err) {
+  console.error('Erro ao carregar authRoutes:', err);
+}
 
 // Iniciando o servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+

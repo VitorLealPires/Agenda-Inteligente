@@ -50,3 +50,5 @@ function formatarNumero(numero) {
 
   return null; // Ignora número inválido
 }
+
+module.exports = router;

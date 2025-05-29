@@ -3,6 +3,17 @@ const express = require('express');
 const Cliente = require('../models/Cliente');
 const router = express.Router();
 
+// Rota GET para listar todos os clientes
+router.get('/', async (req, res) => {
+  try {
+    const clientes = await Cliente.find().populate('acoes');
+    res.status(200).json(clientes);
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao buscar clientes', error });
+  }
+});
+
+// Rota POST para cadastrar cliente
 router.post('/', async (req, res) => {
   try {
     const { nome, cpf, telefones } = req.body;
@@ -36,7 +47,6 @@ function formatarNumero(numero) {
   const apenasNumeros = numero.replace(/\D/g, '');
 
   if (apenasNumeros.length === 11 && apenasNumeros.startsWith('0')) {
-    // Remove o zero inicial se existir (ex: 011999999999)
     return `+55${apenasNumeros.substring(1)}`;
   }
 
@@ -48,7 +58,7 @@ function formatarNumero(numero) {
     return `+${apenasNumeros}`;
   }
 
-  return null; // Ignora número inválido
+  return null;
 }
 
 module.exports = router;

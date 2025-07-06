@@ -222,36 +222,36 @@ export default function ClientsList() {
                 const key = client._id || `${client.nome}-${client.cpf}`;
                 return (
                   <TableRow key={key}>
-                    <TableCell>{client.nome}</TableCell>
-                    <TableCell>{client.cpf}</TableCell>
-                    <TableCell>
-                      {client.telefones?.length > 0
-                        ? client.telefones.join(", ")
-                        : "—"}
-                    </TableCell>
-                    <TableCell>{client.tipoAcao || "—"}</TableCell>
-                    <TableCell>{client.advogado || "—"}</TableCell>
-                    <TableCell>
-                      <TableActions>
-                        <Link href={`/clientes/${client._id}`} passHref>
-                          <ActionButton variant="ghost" size="sm">
-                            <Eye size={16} />
-                          </ActionButton>
-                        </Link>
-                        <Link href={`/clientes/editar/${client._id}`} passHref>
-                          <ActionButton variant="ghost" size="sm">
-                            <Edit size={16} />
-                          </ActionButton>
-                        </Link>
-                        <ActionButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(client._id)}
-                        >
-                          <Trash2 size={16} />
+                  <TableCell>{client.nome}</TableCell>
+                  <TableCell>{client.cpf}</TableCell>
+                  <TableCell>
+                    {Array.isArray(client.telefones) && client.telefones.length > 0
+                      ? client.telefones.join(", ")
+                      : client.telefone || "—"}
+                  </TableCell>
+                  <TableCell>{client.tipoAcao || "—"}</TableCell>
+                  <TableCell>{client.advogado || "—"}</TableCell>
+                  <TableCell>
+                    <TableActions>
+                      <Link href={`/clientes/${client._id}`} passHref>
+                        <ActionButton variant="ghost" size="sm">
+                          <Eye size={16} />
                         </ActionButton>
-                      </TableActions>
-                    </TableCell>
+                      </Link>
+                      <Link href={`/clientes/editar/${client._id}`} passHref>
+                        <ActionButton variant="ghost" size="sm">
+                          <Edit size={16} />
+                        </ActionButton>
+                      </Link>
+                      <ActionButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(client._id)}
+                      >
+                        <Trash2 size={16} />
+                      </ActionButton>
+                    </TableActions>
+                  </TableCell>
                   </TableRow>
                 );
               })

@@ -1,4 +1,3 @@
-// routes/clienteRoutes.js 
 const express = require('express');
 const Cliente = require('../models/Cliente');
 const router = express.Router();
@@ -16,15 +15,16 @@ router.get('/', async (req, res) => {
 // Rota POST para cadastrar cliente
 router.post('/', async (req, res) => {
   try {
-    const { nome, cpf, telefones } = req.body;
+    const { nome, cpf, telefones, telefone } = req.body;
 
-    // Se o campo 'telefones' vier como string simples, transforma em array
     let numerosFormatados = [];
 
     if (Array.isArray(telefones)) {
       numerosFormatados = telefones.map(num => formatarNumero(num)).filter(Boolean);
     } else if (typeof telefones === 'string' && telefones.trim() !== '') {
       numerosFormatados = [formatarNumero(telefones)].filter(Boolean);
+    } else if (typeof telefone === 'string' && telefone.trim() !== '') {
+      numerosFormatados = [formatarNumero(telefone)].filter(Boolean);
     }
 
     const novoCliente = new Cliente({

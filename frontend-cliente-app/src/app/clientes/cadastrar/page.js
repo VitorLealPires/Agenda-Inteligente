@@ -70,20 +70,15 @@ export default function ClientRegister() {
 
   const addTelefone = () => {
     let tel = formData.telefoneTemp.trim()
-
-    // Remove tudo que não for número
     const onlyDigits = tel.replace(/\D/g, "")
 
-    // Validação: deve ter 10 ou 11 dígitos (com DDD)
     if (onlyDigits.length < 10 || onlyDigits.length > 11) return
 
-    // Padronização: +55 (Brasil) + número
-    const formatted = `+55${onlyDigits}`
-
-    if (!formData.telefones.includes(formatted)) {
+    // Evita duplicidade
+    if (!formData.telefones.includes(onlyDigits)) {
       setFormData((prev) => ({
         ...prev,
-        telefones: [...prev.telefones, formatted],
+        telefones: [...prev.telefones, onlyDigits],
         telefoneTemp: "",
       }))
     }
@@ -116,7 +111,7 @@ export default function ClientRegister() {
         body: JSON.stringify({
           nome: formData.nome,
           cpf: formData.cpf,
-          telefones: formData.telefones, // <- Correção aqui
+          telefones: formData.telefones, // <- agora é array puro
         }),
       })
 
@@ -161,7 +156,13 @@ export default function ClientRegister() {
 
               <FormGroup>
                 <Label htmlFor="cpf">CPF</Label>
-                <Input id="cpf" name="cpf" placeholder="000.000.000-00" value={formData.cpf} onChange={handleChange} />
+                <Input
+                  id="cpf"
+                  name="cpf"
+                  placeholder="000.000.000-00"
+                  value={formData.cpf}
+                  onChange={handleChange}
+                />
                 {errors.cpf && <ErrorText>{errors.cpf}</ErrorText>}
               </FormGroup>
 

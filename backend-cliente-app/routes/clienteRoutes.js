@@ -1,4 +1,4 @@
-// routes/clienteRoutes.js
+// routes/clienteRoutes.js 
 const express = require('express');
 const Cliente = require('../models/Cliente');
 const router = express.Router();
@@ -37,6 +37,19 @@ router.post('/', async (req, res) => {
     res.status(201).json(novoCliente);
   } catch (error) {
     res.status(500).json({ message: 'Erro ao cadastrar cliente', error });
+  }
+});
+
+// Rota DELETE para excluir um cliente
+router.delete('/:id', async (req, res) => {
+  try {
+    const cliente = await Cliente.findByIdAndDelete(req.params.id);
+    if (!cliente) {
+      return res.status(404).json({ message: 'Cliente não encontrado' });
+    }
+    res.status(200).json({ message: 'Cliente excluído com sucesso' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao excluir cliente', error });
   }
 });
 

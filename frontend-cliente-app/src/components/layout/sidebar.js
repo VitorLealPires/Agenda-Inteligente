@@ -97,7 +97,7 @@ export default function Sidebar() {
   };
 
   const navItems = [
-    { icon: <Home size={20} />, label: "Dashboard", path: "/" },
+    { icon: <Home size={20} />, label: "Dashboard", path: "/dashboard" },
     { icon: <Users size={20} />, label: "Clientes", path: "/clientes" },
     { icon: <UserPlus size={20} />, label: "Cadastrar Cliente", path: "/clientes/cadastrar" },
     { icon: <Gavel size={20} />, label: "Listar Ações", path: "/acoes" },

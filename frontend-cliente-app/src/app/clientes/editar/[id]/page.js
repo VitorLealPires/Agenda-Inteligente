@@ -31,7 +31,12 @@ export default function EditarCliente() {
   useEffect(() => {
     const fetchCliente = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`);
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!res.ok) throw new Error('Erro ao buscar cliente');
         const data = await res.json();
         const telefonesIniciais = Array.isArray(data.telefones) && data.telefones.length > 0
@@ -84,9 +89,13 @@ export default function EditarCliente() {
     e.preventDefault();
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(cliente),
       });
 

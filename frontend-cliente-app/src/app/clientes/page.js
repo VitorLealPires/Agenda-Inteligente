@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Edit, Trash2, Eye, UserPlus, Search } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -76,6 +77,7 @@ const sortOptions = [
 ];
 
 export default function ClientsList() {
+  const router = useRouter();
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -84,9 +86,19 @@ export default function ClientsList() {
   const [showSortMenu, setShowSortMenu] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     const fetchClients = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (!response.ok) throw new Error("Erro ao buscar clientes");
 
         const data = await response.json();
@@ -99,7 +111,7 @@ export default function ClientsList() {
       }
     };
     fetchClients();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     let filtered = [...clients];
@@ -140,9 +152,14 @@ export default function ClientsList() {
   const handleDelete = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`, {
-          method: "DELETE"
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
+        if (!response.ok) throw new Error("Erro ao excluir cliente");
         setClients((prev) => prev.filter((client) => client._id !== id));
       } catch (error) {
         console.error("Erro ao excluir cliente:", error);

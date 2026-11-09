@@ -59,7 +59,17 @@ export default function CadastrarAcao() {
   useEffect(() => {
     const buscarClientes = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          router.push("/login");
+          return;
+        }
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error("Erro ao carregar lista de clientes");
         const data = await res.json();
         setClientes(data);
       } catch (err) {

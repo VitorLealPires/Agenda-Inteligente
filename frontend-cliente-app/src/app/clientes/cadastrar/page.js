@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import styled from "styled-components"
 import { Save, ArrowLeft, Trash2, Plus } from "lucide-react"
@@ -48,6 +48,13 @@ const PhoneItem = styled.li`
 
 export default function ClientRegister() {
   const router = useRouter()
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -105,13 +112,22 @@ export default function ClientRegister() {
     setIsSubmitting(true)
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           nome: formData.nome,
           cpf: formData.cpf,
-          telefones: formData.telefones, // <- agora é array puro
+          telefones: formData.telefones,
         }),
       })
 

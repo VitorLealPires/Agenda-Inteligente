@@ -26,17 +26,20 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB conectado'))
   .catch(err => console.error('❌ Erro ao conectar ao MongoDB:', err));
 
-// Importando Rotas com try-catch para facilitar debug
+// Middleware de autenticação JWT
+const authMiddleware = require('./middlewares/authMiddleware');
+
+// Importando Rotas protegidas com try-catch para facilitar debug
 try {
   const clienteRoutes = require('./routes/clienteRoutes');
-  app.use('/clientes', clienteRoutes);
+  app.use('/clientes', authMiddleware, clienteRoutes);
 } catch (err) {
   console.error('Erro ao carregar clienteRoutes:', err);
 }
 
 try {
   const acaoRoutes = require('./routes/acaoRoutes');
-  app.use('/acoes', acaoRoutes);
+  app.use('/acoes', authMiddleware, acaoRoutes);
 } catch (err) {
   console.error('Erro ao carregar acaoRoutes:', err);
 }

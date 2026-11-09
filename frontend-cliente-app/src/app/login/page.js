@@ -44,7 +44,6 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    alert("Função de login chamada!");
     setError("");
     setSuccess("");
     console.log("Tentando fazer login com:", credentials);

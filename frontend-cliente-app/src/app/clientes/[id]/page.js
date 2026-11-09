@@ -177,6 +177,7 @@ export default function ClientDetails() {
     nome,
     cpf,
     telefone,
+    telefones,
     tipoAcao,
     advogado,
     observacoes,
@@ -184,6 +185,11 @@ export default function ClientDetails() {
     honorarios,
     dataFechamentoContrato,
   } = client;
+
+  const telefonesFormatados =
+    Array.isArray(telefones) && telefones.length > 0
+      ? telefones.join(", ")
+      : telefone || "Não informado";
 
   return (
     <ClientContainer>
@@ -212,7 +218,7 @@ export default function ClientDetails() {
 
             <InfoGroup>
               <InfoLabel>Telefone</InfoLabel>
-              <InfoValue>{telefone}</InfoValue>
+              <InfoValue>{telefonesFormatados}</InfoValue>
             </InfoGroup>
 
             <InfoGroup>

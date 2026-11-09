@@ -34,7 +34,10 @@ export default function EditarCliente() {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/clientes/${id}`);
         if (!res.ok) throw new Error('Erro ao buscar cliente');
         const data = await res.json();
-        setCliente(data);
+        const telefonesIniciais = Array.isArray(data.telefones) && data.telefones.length > 0
+          ? data.telefones
+          : (data.telefone ? [data.telefone] : []);
+        setCliente({ ...data, telefones: telefonesIniciais });
       } catch (err) {
         console.error(err);
       } finally {
